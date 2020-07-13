@@ -51,8 +51,11 @@ static __inline char* appname(const char* path)
 
 int main_utf8(int argc, char** argv)
 {
-	fprintf(stderr, "%s %s © 2020 Pete Batard <pete@akeo.ie>\n\n",
-		appname(argv[0]), APP_VERSION_STR);
+	fprintf(stderr, "%s %s © 2020 Pete Batard <pete@akeo.ie>\n\n", appname(argv[0]), APP_VERSION_STR);
+	fprintf(stderr, "This program is free software; you can redistribute it and/or modify it under \n");
+	fprintf(stderr, "the terms of the GNU General Public License as published by the Free Software \n");
+	fprintf(stderr, "Foundation; either version 3 of the License or any later version.\n\n");
+	fprintf(stderr, "Official project and latest downloads at: https://github.com/pbatard/base-console\n\n");
 
 	fprintf(stdout, "Hello world!\n");
 
@@ -63,6 +66,8 @@ int wmain(int argc, wchar_t** argv16)
 {
 	SetConsoleOutputCP(CP_UTF8);
 	char** argv = calloc(argc, sizeof(char*));
+	if (argv == NULL)
+		return -1;
 	for (int i = 0; i < argc; i++)
 		argv[i] = wchar_to_utf8(argv16[i]);
 	int r = main_utf8(argc, argv);
