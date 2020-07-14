@@ -25,5 +25,7 @@ git mv .vs/$ORG.vcxproj .vs/$NEW.vcxproj
 git mv .vs/$ORG.vcxproj.filters .vs/$NEW.vcxproj.filters
 git mv .vs/$ORG.vcxproj.user .vs/$NEW.vcxproj.user
 git mv src/$ORG.c src/$NEW.c
+# Delete existing tags
+git tag | xargs git tag -d
 
 echo "Do not forget to change FRIENDLY_NAME in AppVeyor.yml and update README.md."
