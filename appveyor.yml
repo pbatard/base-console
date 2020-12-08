@@ -7,7 +7,11 @@ environment:
 
 build_script:
   ps: |-
-      msbuild "$env:APPVEYOR_PROJECT_NAME.sln" /m /p:Configuration=Release /p:Platform=x86 /p:AppVersion=$env:APPVEYOR_REPO_TAG_NAME /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll"
+      $BUILD_URL="$env:APPVEYOR_URL/project/$env:APPVEYOR_ACCOUNT_NAME/$env:APPVEYOR_PROJECT_SLUG/builds/$env:APPVEYOR_BUILD_ID"
+      $FILE_VERSION=$env:APPVEYOR_REPO_TAG_NAME -replace "[^0-9.-]" -replace '\.',','
+      while (($FILE_VERSION.ToCharArray() -eq ',').count -lt 3) { $FILE_VERSION = $FILE_VERSION + ",0" }
+      $FILE_VERSION=$FILE_VERSION -replace ',','%2c'
+      msbuild "$env:APPVEYOR_PROJECT_NAME.sln" /m /p:Configuration=Release /p:Platform=x86 /p:AppVersion="$env:APPVEYOR_REPO_TAG_NAME" /p:AppFileVersion="$FILE_VERSION" /p:AppComments="$BUILD_URL" /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll"
 
 after_build:
   ps: |-
