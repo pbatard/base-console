@@ -146,7 +146,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(AppComments)' != ''">
     <ResourceCompile>
-      <AdditionalOptions>/DAPP_COMMENTS=$(AppComments) %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/DAPP_COMMENTS="$(AppComments)" %(AdditionalOptions)</AdditionalOptions>
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">

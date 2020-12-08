@@ -7,11 +7,38 @@ environment:
 
 build_script:
   ps: |-
+      # Build the AppVeyor log URL for the current build
       $BUILD_URL="$env:APPVEYOR_URL/project/$env:APPVEYOR_ACCOUNT_NAME/$env:APPVEYOR_PROJECT_SLUG/builds/$env:APPVEYOR_BUILD_ID"
-      $FILE_VERSION=$env:APPVEYOR_REPO_TAG_NAME -replace "[^0-9.-]" -replace '\.',','
+      # Build a version field for VERSION_INFO, by:
+      # - Removing anything that's not a digit or a dot, and replacing dots by commas ("v2.3" -> "2,3")
+      $FILE_VERSION=$env:APPVEYOR_REPO_TAG_NAME -replace '[^0-9.]' -replace '\.',','
+      # - Appending ",0" so that we end up with 4 sequences ("2,3" -> "2,3,0,0")
       while (($FILE_VERSION.ToCharArray() -eq ',').count -lt 3) { $FILE_VERSION = $FILE_VERSION + ",0" }
+      # - Replacing commas with "%2c" since /p chokes on them even if the value is quoted ("2,3,0,0" -> "2%2c3%2c0%2c0")
       $FILE_VERSION=$FILE_VERSION -replace ',','%2c'
-      msbuild "$env:APPVEYOR_PROJECT_NAME.sln" /m /p:Configuration=Release /p:Platform=x86 /p:AppVersion="$env:APPVEYOR_REPO_TAG_NAME" /p:AppFileVersion="$FILE_VERSION" /p:AppComments="$BUILD_URL" /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll"
+      # We'll use the VERSION_INFO 'Comments' field to insert some JSON data pertaining to this specific build
+      # Note that we use JSON5 here, on account that RC.exe removes ALL doubles quotes from VERSION_INFO fields
+      $JSON=@"
+      {
+        'Title': 'Build Descriptor',
+        'Version': 1.0,
+        'Build': {
+          'Facility': 'AppVeyor',
+          'Url': '$BUILD_URL',
+          'Repo': {
+            'Branch': '$env:APPVEYOR_REPO_BRANCH',
+            'Commit': '$env:APPVEYOR_REPO_COMMIT',
+            'License': 'GPLv3+',
+            'Name': '$env:APPVEYOR_REPO_NAME',
+            'Provider': '$env:APPVEYOR_REPO_PROVIDER',
+            'Scm': '$env:APPVEYOR_REPO_SCM'
+          }
+        }
+      }
+      "@
+      # Obviously, /p doesn't take multiline either so convert the above to single line, convert commas, and remove extra spaces
+      $JSON=$JSON -replace '\n','' -replace '\s+',' ' -replace ',','%2c'
+      msbuild "$env:APPVEYOR_PROJECT_NAME.sln" /m /p:Configuration=Release /p:Platform=x86 /p:AppVersion="$env:APPVEYOR_REPO_TAG_NAME" /p:AppFileVersion="$FILE_VERSION" /p:AppComments="$JSON" /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll"
 
 after_build:
   ps: |-
