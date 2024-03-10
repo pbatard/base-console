@@ -11,7 +11,7 @@ else
 fi
 
 if [[ $new =~ "_" ]]; then
-   echo "A project names with underscore(s) is not suitable for AppVeyor"
+   echo "A project names with underscore(s) is not suitable for GitHub"
    exit 1
 fi
 
@@ -28,4 +28,4 @@ git mv src/$ORG.c src/$NEW.c
 # Delete existing tags
 git tag | xargs git tag -d
 
-echo "Do not forget to change FRIENDLY_NAME in AppVeyor.yml and update README.md."
+echo "Do not forget to change FRIENDLY_NAME in vs2022.yml and update README.md."

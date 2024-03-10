@@ -49,7 +49,7 @@ BEGIN
             VALUE "FileDescription",    "Base Console"
             VALUE "FileVersion",        APP_FILE_VERSION_STR
             VALUE "InternalName",       "base-console.exe"
-            VALUE "LegalCopyright",     "Copyright © 2020 Pete Batard <pete@akeo.ie>"
+            VALUE "LegalCopyright",     "Copyright © 2020-2024 Pete Batard <pete@akeo.ie>"
             VALUE "OriginalFilename",   "base-console.exe"
             VALUE "ProductName",        "Base Console"
             VALUE "ProductVersion",     APP_FILE_VERSION_STR
