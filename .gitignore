@@ -38,3 +38,6 @@ arm
 arm64
 x64
 x86
+base-console
+.vs/vcpkg_installed
+.vs/base-console

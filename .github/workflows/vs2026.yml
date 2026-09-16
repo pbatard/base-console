@@ -1,13 +1,19 @@
 name: VS2026
 
-on: [push, pull_request]
-
+on:
+  push:
+    paths-ignore:
+      - '**.md'
+  pull_request:
+    branches: [master]
+    paths-ignore:
+      - '**.md'
 env:
-  FRIENDLY_NAME: Base Console
+  SHORT_NAME: base-console
   CONFIGURATION: Release
 
 jobs:
-  VS2022-Build:
+  build:
     runs-on: windows-latest
 
     strategy:
@@ -29,6 +35,17 @@ jobs:
       run: |
         git_tag=$(git describe --tags --abbrev=0 || echo v0.0)
         echo "version=$git_tag" >> $GITHUB_OUTPUT
+
+    - name: Enable vcpkg support
+      shell: pwsh
+      run: |
+        # Builds that use vcpkg.json don't seem to work unless 'vcpkg integrate install'
+        # is invoked, even when you have <VcpkgEnableManifest>true</VcpkgEnableManifest>
+        # in your .vcxproj... So we have to run this extra step for proper vcpkg support.
+        cd $env:VCPKG_INSTALLATION_ROOT
+        git pull
+        .\bootstrap-vcpkg.bat
+        .\vcpkg integrate install
 
     - name: Build
       shell: pwsh
@@ -63,26 +80,22 @@ jobs:
         }
         "@
         $JSON=$JSON -replace '\n','' -replace '\s+',' ' -replace ',','%2c' -replace '"',"'"
-        msbuild ${{ github.event.repository.name }}.sln /m /p:Configuration=${{ env.CONFIGURATION }} /p:Platform=,Platform=${{ matrix.TARGET_PLATFORM }} /p:AppVersion=${{ steps.set_version.outputs.version }} /p:AppFileVersion="$FILE_VERSION" /p:AppComments="$JSON"
+        msbuild ${{ github.event.repository.name }}.sln /m /p:Configuration=${{ env.CONFIGURATION }} /p:Platform=${{ matrix.TARGET_PLATFORM }} /p:AppVersion=${{ steps.set_version.outputs.version }} /p:AppFileVersion="$FILE_VERSION" /p:AppComments="$JSON"
+        move ${{ matrix.TARGET_PLATFORM }}\${{ env.CONFIGURATION }}\${{ env.SHORT_NAME }}.exe .\${{ env.SHORT_NAME }}_${{ matrix.TARGET_PLATFORM }}.exe
 
     - name: Display SHA-256
-      run: sha256sum ./${{ matrix.TARGET_PLATFORM }}/${{ env.CONFIGURATION }}/*.exe
+      run: sha256sum ./*.exe
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v7
       if: ${{ github.event_name == 'push' }}
       with:
         name: ${{ matrix.TARGET_PLATFORM }}
-        path: ./${{ matrix.TARGET_PLATFORM }}/${{ env.CONFIGURATION }}/*.exe
-
-    - name: Create release archive
-      if: startsWith(github.ref, 'refs/tags/')
-      run: 7z a ${{ github.event.repository.name }}_${{ matrix.TARGET_PLATFORM }}.zip ./${{ matrix.TARGET_PLATFORM }}/${{ env.CONFIGURATION }}/*.exe README.md LICENSE.txt
+        path: ./*.exe
 
     - name: Upload release
       uses: softprops/action-gh-release@v3
       if: startsWith(github.ref, 'refs/tags/')
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
-        body: ${{ env.FRIENDLY_NAME}} ${{ steps.set_version.outputs.version }}
-        files: ./*.zip
+        files: ./*.exe

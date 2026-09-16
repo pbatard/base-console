@@ -15,17 +15,12 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\src\msapi_utf8.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="..\src\base-console.c">
+    <ClCompile Include="..\base-console.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="..\src\version.rc">
+    <ResourceCompile Include="..\version.rc">
       <Filter>Resources</Filter>
     </ResourceCompile>
   </ItemGroup>

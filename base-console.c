@@ -2,7 +2,7 @@
  * base-console - Because sometimes I want to release a win32 console
  * utility in a hurry, and I like to have it set up properly.
  *
- * Copyright © 2020-2024 Pete Batard <pete@akeo.ie>
+ * Copyright © 2020-2026 Pete Batard <pete@akeo.ie>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,20 +18,20 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifdef _MSC_VER
 #ifdef _DEBUG
 #define _CRTDBG_MAP_ALLOC
 #include <stdlib.h>
 #include <crtdbg.h>
 #endif
-
-#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#else
+#include <libgen.h>
+#endif
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
-
-#include "msapi_utf8.h"
 
 #define _STRINGIFY(x) #x
 #define STRINGIFY(x) _STRINGIFY(x)
@@ -42,16 +42,22 @@
 #define APP_VERSION_STR STRINGIFY(APP_VERSION)
 #endif
 
-static __inline char* appname(const char* path)
+#ifdef _MSC_VER
+static __inline char* basename(const char* path)
 {
-	static char appname[128];
-	_splitpath_s(path, NULL, 0, NULL, 0, appname, sizeof(appname), NULL, 0);
-	return appname;
+	static char basename[128];
+	_splitpath_s(path, NULL, 0, NULL, 0, basename, sizeof(basename), NULL, 0);
+	return basename;
 }
+#endif
 
+#ifdef _MSC_VER
 int main_utf8(int argc, char** argv)
+#else
+int main(int argc, char** argv)
+#endif
 {
-	fprintf(stderr, "%s %s © 2020-2024 Pete Batard <pete@akeo.ie>\n\n", appname(argv[0]), APP_VERSION_STR);
+	fprintf(stderr, "%s %s © 2020-2026 Pete Batard <pete@akeo.ie>\n\n", basename(argv[0]), APP_VERSION_STR);
 	fprintf(stderr, "This program is free software; you can redistribute it and/or modify it under \n");
 	fprintf(stderr, "the terms of the GNU General Public License as published by the Free Software \n");
 	fprintf(stderr, "Foundation; either version 3 of the License or any later version.\n\n");
@@ -60,6 +66,29 @@ int main_utf8(int argc, char** argv)
 	fprintf(stdout, "Hello world!\n");
 
 	return 0;
+}
+
+#ifdef _MSC_VER
+static __inline char* wchar_to_utf8(const wchar_t* wstr)
+{
+	int size = 0;
+	char* str = NULL;
+
+	if (wstr[0] == 0)
+		return (char*)calloc(1, 1);
+
+	size = WideCharToMultiByte(CP_UTF8, 0, wstr, -1, NULL, 0, NULL, NULL);
+	if (size <= 1)
+		return NULL;
+
+	if ((str = (char*)calloc(size, 1)) == NULL)
+		return NULL;
+	if (WideCharToMultiByte(CP_UTF8, 0, wstr, -1, str, size, NULL, NULL) != size) {
+		free(str);
+		return NULL;
+	}
+
+	return str;
 }
 
 int wmain(int argc, wchar_t** argv16)
@@ -79,3 +108,4 @@ int wmain(int argc, wchar_t** argv16)
 #endif
 	return r;
 }
+#endif
